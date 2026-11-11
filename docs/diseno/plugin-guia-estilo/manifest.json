@@ -1,0 +1,12 @@
+{
+  "name": "Guía de estilo - Salón",
+  "id": "guia-estilo-salon-local",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "menu": [
+    { "name": "1. Crear guía de estilo", "command": "guia" },
+    { "name": "2. Crear componentes", "command": "componentes" }
+  ]
+}
