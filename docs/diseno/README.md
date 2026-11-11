@@ -3,7 +3,7 @@
 Diseño de la interfaz del sistema de citas para el salón de belleza, realizado en Figma antes del desarrollo.
 
 - **Archivo de Figma:** [Sistemas-citas diseño](https://www.figma.com/design/6uMRUxFX94QfGki2HLAC5E/Sistemas-citas-dise%C3%B1o)
-- **`plugin-guia-estilo/`:** plugin de Figma que genera por código los estilos de color, los estilos de texto y los componentes base.
+- **`plugin-guia-estilo/`:** plugin de Figma que genera por código los estilos de color, los estilos de texto, los componentes base y los wireframes.
 
 ## Guía de estilo
 
@@ -24,4 +24,18 @@ Tipografías: **Playfair Display** (títulos) y **DM Sans** (texto e interfaz).
 
 1. Abrir el archivo en la app de escritorio de Figma.
 2. Plugins → Desarrollo → Importar plugin desde manifiesto → seleccionar `plugin-guia-estilo/manifest.json`.
-3. Ejecutar **1. Crear guía de estilo** y después **2. Crear componentes**.
+3. Ejecutar en orden:
+   - **1. Crear guía de estilo**: estilos de color y de texto.
+   - **2. Crear componentes**: botón, input, día del calendario, horario y tarjeta de servicio.
+   - **3. Crear wireframes**: 12 pantallas móviles de baja fidelidad en la página *Wireframes*.
+
+## Pantallas (wireframes)
+
+| Sitio público | Panel de la dueña |
+|---|---|
+| 01 Inicio | 07 Login |
+| 02 Reserva · Servicio | 08 Agenda |
+| 03 Reserva · Día | 09 Detalle de cita |
+| 04 Reserva · Hora | 10 Bloqueos y vacaciones |
+| 05 Reserva · Datos | 11 Servicios |
+| 06 Confirmación | 12 Horario semanal |
