@@ -431,8 +431,540 @@ async function generarComponentes() {
   figma.closePlugin("Componentes creados: Botón, Input, Día calendario, Horario y Tarjeta servicio.");
 }
 
+// ---------------------------------------------------------------------------
+// Wireframes de baja fidelidad (escala de grises, móvil 390 px)
+// ---------------------------------------------------------------------------
+
+// Se usa una paleta de grises para que el wireframe se enfoque en estructura y no en estilo
+const G = {
+  texto: "222222",
+  sec: "777777",
+  caja: "E6E6E6",
+  borde: "CFCFCF",
+  oscuro: "333333",
+  claro: "F4F4F4",
+  blanco: "FFFFFF",
+};
+
+function relleno(hex) {
+  return [{ type: "SOLID", color: hexARgb(hex) }];
+}
+
+// Se crea un marco con Auto Layout y sin relleno
+function marco(nombre, direccion, espacio) {
+  const f = figma.createFrame();
+  f.name = nombre;
+  f.layoutMode = direccion;
+  f.itemSpacing = espacio || 0;
+  f.primaryAxisSizingMode = "AUTO";
+  f.counterAxisSizingMode = "AUTO";
+  f.fills = [];
+  return f;
+}
+
+// Se crea un marco de tamaño fijo con el contenido centrado
+function marcoFijo(nombre, ancho, alto) {
+  const f = figma.createFrame();
+  f.name = nombre;
+  f.layoutMode = "HORIZONTAL";
+  f.primaryAxisAlignItems = "CENTER";
+  f.counterAxisAlignItems = "CENTER";
+  f.resize(ancho, alto);
+  f.primaryAxisSizingMode = "FIXED";
+  f.counterAxisSizingMode = "FIXED";
+  f.fills = [];
+  return f;
+}
+
+// Se crea un texto con Inter (siempre disponible en Figma)
+function txt(contenido, tamano, negrita, color) {
+  const t = figma.createText();
+  t.fontName = { family: "Inter", style: negrita ? "Bold" : "Regular" };
+  t.fontSize = tamano || 14;
+  t.characters = contenido;
+  t.fills = relleno(color || G.texto);
+  return t;
+}
+
+// Se agrega un hijo y, si se indica, se estira al ancho del contenedor
+function agregar(padre, hijo, estirar) {
+  padre.appendChild(hijo);
+  if (estirar !== false) {
+    hijo.layoutSizingHorizontal = "FILL";
+    if (hijo.type === "TEXT") hijo.textAutoResize = "HEIGHT";
+  }
+  return hijo;
+}
+
+function fila(nombre, hijos, espacio, repartir) {
+  const f = marco(nombre, "HORIZONTAL", espacio || 8);
+  f.counterAxisAlignItems = "CENTER";
+  if (repartir) f.primaryAxisAlignItems = "SPACE_BETWEEN";
+  hijos.forEach((h) => f.appendChild(h));
+  return f;
+}
+
+function cajaImagen(alto, etiqueta) {
+  const c = marcoFijo(etiqueta, 350, alto);
+  c.fills = relleno(G.caja);
+  c.cornerRadius = 8;
+  c.appendChild(txt(etiqueta, 12, false, G.sec));
+  return c;
+}
+
+function boton(texto, primario) {
+  const b = marcoFijo("Botón", 350, 48);
+  b.cornerRadius = 24;
+  if (primario !== false) {
+    b.fills = relleno(G.oscuro);
+    b.appendChild(txt(texto, 15, true, G.blanco));
+  } else {
+    b.strokes = relleno(G.oscuro);
+    b.strokeWeight = 1.5;
+    b.appendChild(txt(texto, 15, true, G.texto));
+  }
+  return b;
+}
+
+function campo(etiqueta, placeholder) {
+  const c = marco("Input " + etiqueta, "VERTICAL", 6);
+  c.appendChild(txt(etiqueta, 12, true));
+  const caja = marcoFijo("Campo", 350, 44);
+  caja.primaryAxisAlignItems = "MIN";
+  caja.paddingLeft = caja.paddingRight = 12;
+  caja.cornerRadius = 8;
+  caja.fills = relleno(G.blanco);
+  caja.strokes = relleno(G.borde);
+  caja.appendChild(txt(placeholder, 14, false, G.sec));
+  agregar(c, caja);
+  return c;
+}
+
+function encabezado(titulo, atras) {
+  const izquierda = atras
+    ? txt("←  " + titulo, 16, true)
+    : fila("Marca", [cajaRedonda(32, ""), txt(titulo, 16, true)], 8);
+  return fila("Encabezado", [izquierda, txt("☰", 18)], 8, true);
+}
+
+function cajaRedonda(tamano, etiqueta, oscuro) {
+  const c = marcoFijo("Círculo", tamano, tamano);
+  c.cornerRadius = tamano / 2;
+  c.fills = relleno(oscuro ? G.oscuro : G.caja);
+  if (etiqueta) c.appendChild(txt(etiqueta, tamano / 2.5, true, oscuro ? G.blanco : G.sec));
+  return c;
+}
+
+// Se crea el indicador de avance del flujo de reserva
+function pasos(actual) {
+  const p = marco("Pasos", "VERTICAL", 6);
+  const nombres = ["Servicio", "Día", "Hora", "Datos"];
+  agregar(p, txt(`Paso ${actual} de 4 · ${nombres[actual - 1]}`, 12, false, G.sec));
+  const barra = marco("Barra", "HORIZONTAL", 6);
+  agregar(p, barra);
+  for (let i = 1; i <= 4; i++) {
+    const r = figma.createRectangle();
+    r.resize(80, 6);
+    r.cornerRadius = 3;
+    r.fills = relleno(i <= actual ? G.oscuro : G.caja);
+    agregar(barra, r);
+  }
+  return p;
+}
+
+// Se crea una tarjeta con líneas de texto; cada línea es [texto, tamaño, negrita, color]
+function tarjeta(lineas, seleccionada) {
+  const t = marco("Tarjeta", "VERTICAL", 4);
+  t.paddingTop = t.paddingBottom = t.paddingLeft = t.paddingRight = 14;
+  t.cornerRadius = 10;
+  t.fills = relleno(G.blanco);
+  t.strokes = relleno(seleccionada ? G.oscuro : G.borde);
+  t.strokeWeight = seleccionada ? 2 : 1;
+  lineas.forEach((l) => {
+    if (typeof l === "string") agregar(t, txt(l, 14));
+    else if (l.type) agregar(t, l);
+    else agregar(t, txt(l[0], l[1] || 14, l[2], l[3]));
+  });
+  return t;
+}
+
+function dato(etiqueta, valor) {
+  const f = fila("Dato", [txt(etiqueta, 14, false, G.sec), txt(valor, 14, true)], 8, true);
+  return f;
+}
+
+function chip(texto, seleccionado) {
+  const c = marcoFijo("Horario", 74, 40);
+  c.cornerRadius = 20;
+  c.strokes = relleno(G.oscuro);
+  if (seleccionado) c.fills = relleno(G.oscuro);
+  c.appendChild(txt(texto, 14, true, seleccionado ? G.blanco : G.texto));
+  return c;
+}
+
+function filaFlexible(nombre, hijos, espacio) {
+  const f = marco(nombre, "HORIZONTAL", espacio);
+  f.layoutWrap = "WRAP";
+  f.counterAxisSpacing = espacio;
+  hijos.forEach((h) => f.appendChild(h));
+  return f;
+}
+
+function segmentado(opciones, activa) {
+  const s = marco("Selector", "HORIZONTAL", 4);
+  s.paddingTop = s.paddingBottom = s.paddingLeft = s.paddingRight = 4;
+  s.cornerRadius = 22;
+  s.fills = relleno(G.claro);
+  opciones.forEach((o, i) => {
+    const op = marcoFijo(o, 100, 36);
+    op.cornerRadius = 18;
+    if (i === activa) {
+      op.fills = relleno(G.blanco);
+      op.strokes = relleno(G.borde);
+    }
+    op.appendChild(txt(o, 13, i === activa, i === activa ? G.texto : G.sec));
+    agregar(s, op);
+  });
+  return s;
+}
+
+function interruptor(encendido) {
+  const s = marcoFijo("Switch", 44, 24);
+  s.cornerRadius = 12;
+  s.fills = relleno(encendido ? G.oscuro : G.caja);
+  s.primaryAxisAlignItems = encendido ? "MAX" : "MIN";
+  s.paddingLeft = s.paddingRight = 3;
+  const bola = marcoFijo("Bola", 18, 18);
+  bola.cornerRadius = 9;
+  bola.fills = relleno(G.blanco);
+  s.appendChild(bola);
+  return s;
+}
+
+// Se crea la barra de navegación inferior del panel de la dueña
+function navAdmin(activa) {
+  const n = marco("Navegación", "HORIZONTAL", 4);
+  n.primaryAxisAlignItems = "SPACE_BETWEEN";
+  n.paddingTop = n.paddingBottom = 12;
+  n.paddingLeft = n.paddingRight = 16;
+  n.cornerRadius = 12;
+  n.fills = relleno(G.claro);
+  ["Agenda", "Bloqueos", "Servicios", "Horario"].forEach((o) => {
+    n.appendChild(txt(o, 13, o === activa, o === activa ? G.texto : G.sec));
+  });
+  return n;
+}
+
+// Se construye el calendario de noviembre 2026 con todos los estados de día
+function calendario() {
+  const cal = marco("Calendario", "VERTICAL", 6);
+  agregar(cal, fila("Mes", [txt("‹", 18, true), txt("Noviembre 2026", 15, true), txt("›", 18, true)], 8, true));
+  const semana = fila("Días de la semana", [], 0, true);
+  ["L", "M", "M", "J", "V", "S", "D"].forEach((d) => {
+    const c = marcoFijo(d, 40, 24);
+    c.appendChild(txt(d, 12, true, G.sec));
+    semana.appendChild(c);
+  });
+  agregar(cal, semana);
+
+  // El 1 de noviembre de 2026 cae en domingo, por eso se dejan 6 espacios al inicio
+  const celdas = Array(6).fill(null);
+  for (let d = 1; d <= 30; d++) celdas.push(d);
+  while (celdas.length % 7 !== 0) celdas.push(null);
+
+  for (let i = 0; i < celdas.length; i += 7) {
+    const renglon = fila("Semana", [], 0, true);
+    celdas.slice(i, i + 7).forEach((d, col) => {
+      const c = marcoFijo(d ? String(d) : "vacío", 40, 40);
+      c.cornerRadius = 20;
+      if (d) {
+        const domingo = col === 6;
+        let color = G.texto;
+        let tachado = false;
+        if (d < 11) color = G.borde;
+        else if (d === 19) { c.fills = relleno(G.oscuro); color = G.blanco; }
+        else if (d === 11) { c.strokes = relleno(G.oscuro); c.strokeWeight = 2; }
+        else if (domingo || d === 25) { color = G.borde; tachado = true; }
+        else if (d === 24) color = G.sec;
+        else c.fills = relleno(G.claro);
+        const t = txt(String(d), 14, d === 19 || d === 11, color);
+        if (tachado) t.textDecoration = "STRIKETHROUGH";
+        c.appendChild(t);
+      }
+      renglon.appendChild(c);
+    });
+    agregar(cal, renglon);
+  }
+  agregar(cal, txt("○ Disponible   ● Seleccionado   ◌ Hoy   — Bloqueado", 11, false, G.sec));
+  return cal;
+}
+
+// Se crea una pantalla de móvil de 390 px de ancho que crece hacia abajo según su contenido
+function pantalla(nombre) {
+  const p = figma.createFrame();
+  p.name = nombre;
+  p.layoutMode = "VERTICAL";
+  p.resize(390, 844);
+  p.counterAxisSizingMode = "FIXED";
+  p.primaryAxisSizingMode = "AUTO";
+  p.paddingTop = p.paddingBottom = p.paddingLeft = p.paddingRight = 20;
+  p.itemSpacing = 16;
+  p.fills = relleno(G.blanco);
+  p.strokes = relleno(G.borde);
+  p.cornerRadius = 24;
+  try { p.minHeight = 844; } catch (e) { /* Se ignora si la versión de Figma no soporta minHeight */ }
+  return p;
+}
+
+function resumenServicio() {
+  return tarjeta([["Corte y peinado · 60 min · $350", 13, true]]);
+}
+
+// ----- Pantallas del sitio público -----
+
+function pInicio() {
+  const p = pantalla("01 Inicio");
+  agregar(p, encabezado("Salón"));
+  agregar(p, cajaImagen(200, "Imagen principal del salón"));
+  agregar(p, txt("Belleza que te hace sentir tú", 26, true));
+  agregar(p, txt("Agenda tu cita en menos de un minuto, sin llamadas ni esperas.", 14, false, G.sec));
+  agregar(p, boton("Agenda tu cita"));
+  agregar(p, txt("Servicios destacados", 18, true));
+  [["Corte y peinado", "60 min · $350"], ["Tinte completo", "120 min · $900"], ["Manicure", "45 min · $250"]]
+    .forEach(([n, d]) => agregar(p, tarjeta([[n, 15, true], [d, 13, false, G.sec]])));
+  agregar(p, txt("Ver todos los servicios →", 14, true));
+  agregar(p, txt("Ubicación", 18, true));
+  agregar(p, cajaImagen(140, "Mapa"));
+  agregar(p, txt("Calle ejemplo #123, Toluca · Lun a Sáb 10:00–19:00", 13, false, G.sec));
+  agregar(p, boton("Escríbenos por WhatsApp", false));
+  return p;
+}
+
+function pServicio() {
+  const p = pantalla("02 Reserva · Servicio");
+  agregar(p, encabezado("Agenda tu cita", true));
+  agregar(p, pasos(1));
+  agregar(p, txt("¿Qué servicio quieres?", 22, true));
+  agregar(p, tarjeta([["Corte y peinado", 15, true], ["Incluye lavado y peinado", 13, false, G.sec], ["60 min · $350", 13, true]], true));
+  agregar(p, tarjeta([["Tinte completo", 15, true], ["Color uniforme de raíz a puntas", 13, false, G.sec], ["120 min · $900", 13, true]]));
+  agregar(p, tarjeta([["Manicure", 15, true], ["Limado, cutícula y esmaltado", 13, false, G.sec], ["45 min · $250", 13, true]]));
+  agregar(p, tarjeta([["Peinado para evento", 15, true], ["Recogido o suelto con ondas", 13, false, G.sec], ["90 min · $600", 13, true]]));
+  agregar(p, boton("Continuar"));
+  return p;
+}
+
+function pDia() {
+  const p = pantalla("03 Reserva · Día");
+  agregar(p, encabezado("Agenda tu cita", true));
+  agregar(p, pasos(2));
+  agregar(p, resumenServicio());
+  agregar(p, txt("Elige el día", 22, true));
+  agregar(p, calendario());
+  agregar(p, boton("Continuar"));
+  return p;
+}
+
+function pHora() {
+  const p = pantalla("04 Reserva · Hora");
+  agregar(p, encabezado("Agenda tu cita", true));
+  agregar(p, pasos(3));
+  agregar(p, resumenServicio());
+  agregar(p, txt("Elige la hora", 22, true));
+  agregar(p, txt("Jueves 19 de noviembre", 14, false, G.sec));
+  agregar(p, txt("Mañana", 14, true));
+  agregar(p, filaFlexible("Horas mañana", ["10:00", "10:30", "11:00", "11:30", "12:00"].map((h) => chip(h, h === "11:00")), 10));
+  agregar(p, txt("Tarde", 14, true));
+  agregar(p, filaFlexible("Horas tarde", ["16:00", "16:30", "17:00", "17:30", "18:00"].map((h) => chip(h)), 10));
+  agregar(p, txt("Solo se muestran los horarios con espacio para tu servicio.", 12, false, G.sec));
+  agregar(p, boton("Continuar"));
+  return p;
+}
+
+function pDatos() {
+  const p = pantalla("05 Reserva · Datos");
+  agregar(p, encabezado("Agenda tu cita", true));
+  agregar(p, pasos(4));
+  agregar(p, txt("Tus datos", 22, true));
+  agregar(p, campo("Nombre", "Ej. María López"));
+  agregar(p, campo("WhatsApp", "10 dígitos"));
+  agregar(p, txt("Te enviaremos la confirmación por WhatsApp.", 12, false, G.sec));
+  agregar(p, tarjeta([["Resumen", 14, true], dato("Servicio", "Corte y peinado"), dato("Fecha", "Jue 19 nov"), dato("Hora", "11:00"), dato("Total", "$350")]));
+  agregar(p, boton("Confirmar cita"));
+  return p;
+}
+
+function pConfirmacion() {
+  const p = pantalla("06 Confirmación");
+  p.counterAxisAlignItems = "CENTER";
+  agregar(p, encabezado("Salón"));
+  agregar(p, cajaRedonda(80, "✓", true), false);
+  const titulo = agregar(p, txt("¡Tu cita está agendada!", 24, true));
+  titulo.textAlignHorizontal = "CENTER";
+  const sub = agregar(p, txt("Te esperamos. Si necesitas cambiarla, escríbenos.", 14, false, G.sec));
+  sub.textAlignHorizontal = "CENTER";
+  agregar(p, tarjeta([dato("Servicio", "Corte y peinado"), dato("Fecha", "Jueves 19 nov"), dato("Hora", "11:00 – 12:00"), dato("Total", "$350")]));
+  agregar(p, boton("Enviar resumen por WhatsApp"));
+  agregar(p, boton("Volver al inicio", false));
+  return p;
+}
+
+// ----- Pantallas del panel de la dueña -----
+
+function pLogin() {
+  const p = pantalla("07 Login");
+  p.counterAxisAlignItems = "CENTER";
+  p.primaryAxisAlignItems = "CENTER";
+  agregar(p, cajaRedonda(72, "Logo"), false);
+  const t = agregar(p, txt("Panel del salón", 24, true));
+  t.textAlignHorizontal = "CENTER";
+  agregar(p, campo("Usuario", "usuario"));
+  agregar(p, campo("Contraseña", "••••••••"));
+  agregar(p, boton("Entrar"));
+  return p;
+}
+
+function citaFila(hora, clienta, servicio, estado) {
+  return tarjeta([
+    fila("Fila cita", [txt(hora, 15, true), txt(estado, 12, true, G.sec)], 8, true),
+    [clienta, 14, true],
+    [servicio, 13, false, G.sec],
+  ]);
+}
+
+function pAgenda() {
+  const p = pantalla("08 Agenda");
+  agregar(p, encabezado("Panel"));
+  agregar(p, segmentado(["Día", "Semana"], 0));
+  agregar(p, fila("Fecha", [txt("‹", 18, true), txt("Hoy · jueves 19 nov", 15, true), txt("›", 18, true)], 8, true));
+  agregar(p, txt("4 citas · 2 horas libres", 13, false, G.sec));
+  agregar(p, citaFila("10:00", "Ana Martínez", "Manicure · 45 min", "Confirmada"));
+  agregar(p, citaFila("11:00", "María López", "Corte y peinado · 60 min", "Pendiente"));
+  agregar(p, tarjeta([["14:00 – 16:00 · Bloqueado", 14, true, G.sec], ["Pendiente personal", 13, false, G.sec]]));
+  agregar(p, citaFila("16:00", "Laura Gómez", "Tinte completo · 120 min", "Confirmada"));
+  agregar(p, citaFila("18:00", "Sofía Ruiz", "Manicure · 45 min", "Pendiente"));
+  agregar(p, navAdmin("Agenda"));
+  return p;
+}
+
+function pDetalle() {
+  const p = pantalla("09 Detalle de cita");
+  agregar(p, encabezado("Cita", true));
+  agregar(p, tarjeta([
+    ["María López", 18, true],
+    dato("WhatsApp", "722 123 4567"),
+    dato("Servicio", "Corte y peinado"),
+    dato("Fecha", "Jue 19 nov"),
+    dato("Hora", "11:00 – 12:00"),
+    dato("Precio", "$350"),
+    dato("Estado", "Pendiente"),
+  ]));
+  agregar(p, boton("Confirmar cita"));
+  agregar(p, boton("Marcar como completada", false));
+  agregar(p, boton("Contactar por WhatsApp", false));
+  agregar(p, txt("Cancelar cita", 14, true, G.sec));
+  return p;
+}
+
+function pBloqueos() {
+  const p = pantalla("10 Bloqueos y vacaciones");
+  agregar(p, encabezado("Panel"));
+  agregar(p, txt("Días inhábiles y vacaciones", 22, true));
+  agregar(p, tarjeta([["24 – 31 dic · Vacaciones", 14, true], ["Rango de fechas", 13, false, G.sec]]));
+  agregar(p, tarjeta([["25 nov · Día completo", 14, true], ["Personal", 13, false, G.sec]]));
+  agregar(p, tarjeta([["19 nov · 14:00 – 16:00", 14, true], ["Horas específicas", 13, false, G.sec]]));
+  agregar(p, txt("Nuevo bloqueo", 18, true));
+  agregar(p, segmentado(["Día", "Rango", "Horas"], 1));
+  agregar(p, campo("Fecha inicio", "dd/mm/aaaa"));
+  agregar(p, campo("Fecha fin", "dd/mm/aaaa"));
+  agregar(p, campo("Motivo (opcional)", "Ej. Vacaciones"));
+  agregar(p, txt("⚠ Hay 2 citas dentro de este rango.", 12, true, G.sec));
+  agregar(p, boton("Guardar bloqueo"));
+  agregar(p, navAdmin("Bloqueos"));
+  return p;
+}
+
+function servicioFila(nombre, detalle, activo) {
+  const info = marco("Info", "VERTICAL", 2);
+  info.appendChild(txt(nombre, 15, true, activo ? G.texto : G.sec));
+  info.appendChild(txt(detalle, 13, false, G.sec));
+  return tarjeta([fila("Servicio", [info, interruptor(activo)], 8, true)]);
+}
+
+function pServicios() {
+  const p = pantalla("11 Servicios");
+  agregar(p, encabezado("Panel"));
+  agregar(p, txt("Mis servicios", 22, true));
+  agregar(p, boton("+ Nuevo servicio"));
+  agregar(p, servicioFila("Corte y peinado", "60 min · $350", true));
+  agregar(p, servicioFila("Tinte completo", "120 min · $900", true));
+  agregar(p, servicioFila("Manicure", "45 min · $250", true));
+  agregar(p, servicioFila("Peinado para evento", "90 min · $600", true));
+  agregar(p, servicioFila("Alaciado", "180 min · $1,500 · Inactivo", false));
+  agregar(p, navAdmin("Servicios"));
+  return p;
+}
+
+function pHorario() {
+  const p = pantalla("12 Horario semanal");
+  agregar(p, encabezado("Panel"));
+  agregar(p, txt("Mi horario", 22, true));
+  agregar(p, txt("Las clientas solo verán horarios dentro de estos rangos.", 13, false, G.sec));
+  [["Lunes", "10:00 – 19:00", true], ["Martes", "10:00 – 19:00", true], ["Miércoles", "10:00 – 19:00", true],
+    ["Jueves", "10:00 – 19:00", true], ["Viernes", "10:00 – 19:00", true], ["Sábado", "09:00 – 15:00", true],
+    ["Domingo", "No laboro", false]].forEach(([dia, horas, activo]) => {
+    const info = marco("Info", "VERTICAL", 2);
+    info.appendChild(txt(dia, 15, true, activo ? G.texto : G.sec));
+    info.appendChild(txt(horas, 13, false, G.sec));
+    agregar(p, fila(dia, [info, interruptor(activo)], 8, true));
+  });
+  agregar(p, boton("Guardar horario"));
+  agregar(p, navAdmin("Horario"));
+  return p;
+}
+
+// Se agrupan las pantallas en una sección con título y se acomodan en fila
+function seccion(titulo, pantallas) {
+  const s = marco(titulo, "VERTICAL", 32);
+  s.appendChild(txt(titulo, 40, true));
+  const filaPantallas = marco("Pantallas", "HORIZONTAL", 80);
+  filaPantallas.counterAxisAlignItems = "MIN";
+  pantallas.forEach((p) => filaPantallas.appendChild(p));
+  s.appendChild(filaPantallas);
+  return s;
+}
+
+async function generarWireframes() {
+  await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+  await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+
+  // Se crea (o se reutiliza) la página de wireframes para no mezclarla con la guía de estilo
+  let pagina = figma.root.children.find((pg) => pg.name === "Wireframes");
+  if (!pagina) {
+    pagina = figma.createPage();
+    pagina.name = "Wireframes";
+  }
+  await figma.setCurrentPageAsync(pagina);
+
+  const publico = seccion("Sitio público (clienta)", [pInicio(), pServicio(), pDia(), pHora(), pDatos(), pConfirmacion()]);
+  const panel = seccion("Panel de la dueña", [pLogin(), pAgenda(), pDetalle(), pBloqueos(), pServicios(), pHorario()]);
+  pagina.appendChild(publico);
+  pagina.appendChild(panel);
+
+  // Se coloca el panel debajo del sitio público, después de cualquier contenido previo
+  const previos = pagina.children.filter((n) => n !== publico && n !== panel);
+  const inicio = previos.reduce((max, n) => Math.max(max, n.y + n.height + 200), 0);
+  publico.x = 0;
+  publico.y = inicio;
+  panel.x = 0;
+  panel.y = publico.y + publico.height + 200;
+
+  figma.currentPage.selection = [publico, panel];
+  figma.viewport.scrollAndZoomIntoView([publico, panel]);
+  figma.closePlugin("Wireframes creados: 12 pantallas en la página Wireframes.");
+}
+
 // Se ejecuta el comando elegido en el menú del plugin
-const comandos = { guia: generarGuia, componentes: generarComponentes };
+const comandos = { guia: generarGuia, componentes: generarComponentes, wireframes: generarWireframes };
 const ejecutar = comandos[figma.command] || generarGuia;
 ejecutar().catch((error) => {
   figma.closePlugin(`Error: ${error.message}`);
