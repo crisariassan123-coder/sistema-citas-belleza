@@ -8,6 +8,7 @@
   "menu": [
     { "name": "1. Crear guía de estilo", "command": "guia" },
     { "name": "2. Crear componentes", "command": "componentes" },
-    { "name": "3. Crear wireframes", "command": "wireframes" }
+    { "name": "3. Crear wireframes", "command": "wireframes" },
+    { "name": "4. Crear alta fidelidad (reserva)", "command": "altaFidelidad" }
   ]
 }
