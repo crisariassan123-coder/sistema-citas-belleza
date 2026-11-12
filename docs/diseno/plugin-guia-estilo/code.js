@@ -963,8 +963,442 @@ async function generarWireframes() {
   figma.closePlugin("Wireframes creados: 12 pantallas en la página Wireframes.");
 }
 
+// ---------------------------------------------------------------------------
+// Alta fidelidad del flujo de reserva con prototipo navegable
+// ---------------------------------------------------------------------------
+
+// Se guardan aquí los estilos y componentes para no pasarlos en cada función
+const AF = { colores: null, textos: null, comp: {} };
+const NOMBRE_SALON = "Salón Aurora";
+
+// Se crea un texto que usa los estilos locales de la guía
+async function af_txt(contenido, estilo, color) {
+  return crearTexto(contenido, AF.textos[estilo], AF.colores[color || "texto/principal"]);
+}
+
+// Se aplica un estilo de color como relleno a un nodo
+async function af_fondo(nodo, color) {
+  await nodo.setFillStyleIdAsync(AF.colores[color].id);
+}
+
+// Se obtiene una variante por nombre dentro de un conjunto de componentes
+function variante(conjunto, nombre) {
+  return conjunto.children.find((c) => c.name === nombre) || conjunto.defaultVariant || conjunto.children[0];
+}
+
+// Se reemplazan los textos de una instancia en el orden en que aparecen
+async function af_textos(instancia, valores) {
+  const nodos = instancia.findAll((n) => n.type === "TEXT");
+  for (let i = 0; i < valores.length && i < nodos.length; i++) {
+    if (valores[i] === null || valores[i] === undefined) continue;
+    await figma.loadFontAsync(nodos[i].fontName);
+    nodos[i].characters = valores[i];
+  }
+  return instancia;
+}
+
+async function af_boton(texto, tipo) {
+  const inst = variante(AF.comp.boton, `Tipo=${tipo || "Primario"}`).createInstance();
+  inst.name = "Botón · " + texto;
+  return af_textos(inst, [texto]);
+}
+
+async function af_input(etiqueta, placeholder) {
+  const inst = variante(AF.comp.input, "Estado=Normal").createInstance();
+  inst.name = "Input · " + etiqueta;
+  return af_textos(inst, [etiqueta, placeholder]);
+}
+
+async function af_tarjeta(nombre, descripcion, duracion, precio, opciones) {
+  const op = opciones || {};
+  const inst = AF.comp.tarjeta.createInstance();
+  inst.name = "Tarjeta · " + nombre;
+  await af_textos(inst, [nombre, descripcion, duracion, precio, op.boton || null]);
+  // Se oculta el botón interno cuando la tarjeta se usa como opción seleccionable
+  if (op.sinBoton) {
+    const b = inst.findOne((n) => n.type === "INSTANCE");
+    if (b) b.visible = false;
+  }
+  if (op.seleccionada) {
+    await inst.setStrokeStyleIdAsync(AF.colores["primario/base"].id);
+    inst.strokeWeight = 2;
+  }
+  return inst;
+}
+
+// Se crea un marco de pantalla móvil con el fondo de la guía
+async function af_pantalla(nombre) {
+  const p = pantalla(nombre);
+  p.strokes = [];
+  p.cornerRadius = 0;
+  p.itemSpacing = 20;
+  p.paddingLeft = p.paddingRight = 20;
+  p.paddingBottom = 32;
+  await af_fondo(p, "fondo/base");
+  return p;
+}
+
+// Se crea el encabezado: marca del salón o botón de regreso con título
+async function af_encabezado(titulo, atras) {
+  let izquierda;
+  if (atras) {
+    izquierda = await af_txt("←  " + titulo, "H3");
+    izquierda.name = "Regresar";
+  } else {
+    const logo = marcoFijo("Logo", 36, 36);
+    logo.cornerRadius = 18;
+    await af_fondo(logo, "primario/base");
+    logo.appendChild(await af_txt("A", "Botón", "fondo/base"));
+    izquierda = fila("Marca", [logo, await af_txt(NOMBRE_SALON, "H3")], 10);
+  }
+  const menu = await af_txt("☰", "H3");
+  return fila("Encabezado", [izquierda, menu], 8, true);
+}
+
+// Se crea el indicador de pasos con los colores de la guía
+async function af_pasos(actual) {
+  const nombres = ["Servicio", "Día", "Hora", "Datos"];
+  const p = marco("Pasos", "VERTICAL", 8);
+  agregar(p, await af_txt(`Paso ${actual} de 4 · ${nombres[actual - 1]}`, "Pequeño", "texto/secundario"));
+  const barra = marco("Barra", "HORIZONTAL", 6);
+  agregar(p, barra);
+  for (let i = 1; i <= 4; i++) {
+    const r = figma.createRectangle();
+    r.resize(80, 6);
+    r.cornerRadius = 3;
+    await af_fondo(r, i <= actual ? "primario/base" : "estado/deshabilitado");
+    agregar(barra, r);
+  }
+  return p;
+}
+
+// Se crea la etiqueta con el servicio elegido que acompaña los pasos 2 y 3
+async function af_resumenChip() {
+  const c = marco("Servicio elegido", "HORIZONTAL", 8);
+  c.counterAxisAlignItems = "CENTER";
+  c.paddingTop = c.paddingBottom = 8;
+  c.paddingLeft = c.paddingRight = 16;
+  c.cornerRadius = 999;
+  await af_fondo(c, "fondo/suave");
+  c.appendChild(await af_txt("✦ Corte y peinado · 60 min · $350", "Pequeño", "primario/hover"));
+  return c;
+}
+
+// Se crea una tarjeta blanca con sombra suave
+function af_tarjetaBlanca(nombre, espacio) {
+  const t = marco(nombre, "VERTICAL", espacio || 12);
+  t.paddingTop = t.paddingBottom = t.paddingLeft = t.paddingRight = 20;
+  t.cornerRadius = 16;
+  t.fills = relleno("FFFFFF");
+  t.effects = [{
+    type: "DROP_SHADOW", color: { r: 0.227, g: 0.165, b: 0.188, a: 0.08 },
+    offset: { x: 0, y: 6 }, radius: 20, spread: 0, visible: true, blendMode: "NORMAL",
+  }];
+  return t;
+}
+
+async function af_dato(etiqueta, valor) {
+  return fila("Dato", [await af_txt(etiqueta, "Cuerpo", "texto/secundario"), await af_txt(valor, "Botón")], 8, true);
+}
+
+async function af_resumen(titulo) {
+  const t = af_tarjetaBlanca("Resumen", 10);
+  if (titulo) agregar(t, await af_txt(titulo, "H3"));
+  agregar(t, await af_dato("Servicio", "Corte y peinado"));
+  agregar(t, await af_dato("Fecha", "Jueves 19 nov"));
+  agregar(t, await af_dato("Hora", "11:00 – 12:00"));
+  const linea = figma.createRectangle();
+  linea.resize(300, 1);
+  await af_fondo(linea, "estado/deshabilitado");
+  agregar(t, linea);
+  agregar(t, fila("Total", [await af_txt("Total", "H3"), await af_txt("$350", "H3", "primario/base")], 8, true));
+  return t;
+}
+
+// Se crea un bloque decorativo con degradado que sustituye a la foto del salón
+async function af_imagen(alto, etiqueta) {
+  const c = marcoFijo(etiqueta, 350, alto);
+  c.cornerRadius = 20;
+  c.primaryAxisAlignItems = "MIN";
+  c.counterAxisAlignItems = "MAX";
+  c.paddingLeft = c.paddingBottom = 16;
+  const a = hexARgb("F8E8EC");
+  const b = hexARgb("C98AA3");
+  c.fills = [{
+    type: "GRADIENT_LINEAR",
+    gradientTransform: [[0.7, 0.7, -0.2], [-0.7, 0.7, 0.5]],
+    gradientStops: [
+      { position: 0, color: { r: a.r, g: a.g, b: a.b, a: 1 } },
+      { position: 1, color: { r: b.r, g: b.g, b: b.b, a: 1 } },
+    ],
+  }];
+  c.appendChild(await af_txt(etiqueta, "Pequeño", "texto/principal"));
+  return c;
+}
+
+// Se arma el calendario con instancias del componente Día calendario
+async function af_calendario() {
+  const cal = af_tarjetaBlanca("Calendario", 8);
+  cal.paddingLeft = cal.paddingRight = 12;
+  agregar(cal, fila("Mes", [
+    await af_txt("‹", "H3", "primario/base"),
+    await af_txt("Noviembre 2026", "H3"),
+    await af_txt("›", "H3", "primario/base"),
+  ], 8, true));
+
+  const semana = fila("Días de la semana", [], 0, true);
+  for (const d of ["L", "M", "M", "J", "V", "S", "D"]) {
+    const c = marcoFijo(d, 44, 24);
+    c.appendChild(await af_txt(d, "Pequeño", "texto/secundario"));
+    semana.appendChild(c);
+  }
+  agregar(cal, semana);
+
+  // El 1 de noviembre de 2026 cae en domingo, por eso se dejan 6 espacios al inicio
+  const celdas = Array(6).fill(null);
+  for (let d = 1; d <= 30; d++) celdas.push(d);
+  while (celdas.length % 7 !== 0) celdas.push(null);
+
+  for (let i = 0; i < celdas.length; i += 7) {
+    const renglon = fila("Semana", [], 0, true);
+    const grupo = celdas.slice(i, i + 7);
+    for (let col = 0; col < 7; col++) {
+      const d = grupo[col];
+      if (!d) {
+        renglon.appendChild(marcoFijo("vacío", 44, 44));
+        continue;
+      }
+      let estado = "Disponible";
+      if (d < 11 || col === 6 || d === 25) estado = "Bloqueado";
+      else if (d === 11) estado = "Hoy";
+      else if (d === 19) estado = "Seleccionado";
+      else if (d === 24) estado = "Sin espacio";
+      const inst = variante(AF.comp.dia, `Estado=${estado}`).createInstance();
+      inst.name = `Día ${d}`;
+      await af_textos(inst, [String(d)]);
+      renglon.appendChild(inst);
+    }
+    agregar(cal, renglon);
+  }
+  return cal;
+}
+
+async function af_leyenda() {
+  const items = [["fondo/suave", "Disponible"], ["primario/base", "Seleccionado"], ["estado/deshabilitado", "No disponible"]];
+  const f = marco("Leyenda", "HORIZONTAL", 16);
+  f.counterAxisAlignItems = "CENTER";
+  for (const [color, texto] of items) {
+    const punto = marcoFijo("Punto", 12, 12);
+    punto.cornerRadius = 6;
+    await af_fondo(punto, color);
+    f.appendChild(fila(texto, [punto, await af_txt(texto, "Pequeño", "texto/secundario")], 6));
+  }
+  return f;
+}
+
+async function af_horarios(horas, seleccionada) {
+  const f = marco("Horarios", "HORIZONTAL", 10);
+  f.layoutWrap = "WRAP";
+  f.counterAxisSpacing = 10;
+  for (const h of horas) {
+    const inst = variante(AF.comp.horario, `Estado=${h === seleccionada ? "Seleccionado" : "Disponible"}`).createInstance();
+    inst.name = "Hora " + h;
+    await af_textos(inst, [h]);
+    f.appendChild(inst);
+  }
+  return f;
+}
+
+// ----- Pantallas -----
+
+async function afInicio() {
+  const p = await af_pantalla("Alta · 01 Inicio");
+  agregar(p, await af_encabezado());
+  agregar(p, await af_imagen(240, "Foto del salón"));
+  agregar(p, await af_txt("Belleza que te hace sentir tú", "H1"));
+  agregar(p, await af_txt("Agenda tu cita en menos de un minuto, sin llamadas ni esperas.", "Cuerpo", "texto/secundario"));
+  const cta = agregar(p, await af_boton("Agenda tu cita"));
+  agregar(p, await af_txt("Servicios", "H2"));
+  agregar(p, await af_tarjeta("Corte y peinado", "Corte a tu medida con lavado y peinado incluido.", "60 min", "$350", { boton: "Reservar" }));
+  agregar(p, await af_tarjeta("Tinte completo", "Color uniforme de raíz a puntas con productos profesionales.", "120 min", "$900", { boton: "Reservar" }));
+  agregar(p, await af_txt("Ver todos los servicios →", "Botón", "primario/base"));
+  agregar(p, await af_txt("Encuéntranos", "H2"));
+  const mapa = agregar(p, marcoFijo("Mapa", 350, 150));
+  mapa.cornerRadius = 20;
+  await af_fondo(mapa, "fondo/suave");
+  mapa.appendChild(await af_txt("📍 Mapa", "Cuerpo", "primario/hover"));
+  agregar(p, await af_txt("Calle ejemplo #123, Toluca, Edo. de México\nLunes a sábado · 10:00 – 19:00", "Pequeño", "texto/secundario"));
+  agregar(p, await af_boton("Escríbenos por WhatsApp", "Secundario"));
+  return { p, siguiente: cta };
+}
+
+async function afServicio() {
+  const p = await af_pantalla("Alta · 02 Reserva · Servicio");
+  const atras = agregar(p, await af_encabezado("Agenda tu cita", true));
+  agregar(p, await af_pasos(1));
+  agregar(p, await af_txt("¿Qué servicio quieres?", "H2"));
+  agregar(p, await af_tarjeta("Corte y peinado", "Corte a tu medida con lavado y peinado incluido.", "60 min", "$350", { sinBoton: true, seleccionada: true }));
+  agregar(p, await af_tarjeta("Tinte completo", "Color uniforme de raíz a puntas.", "120 min", "$900", { sinBoton: true }));
+  agregar(p, await af_tarjeta("Manicure", "Limado, cutícula y esmaltado.", "45 min", "$250", { sinBoton: true }));
+  agregar(p, await af_tarjeta("Peinado para evento", "Recogido o suelto con ondas.", "90 min", "$600", { sinBoton: true }));
+  const sig = agregar(p, await af_boton("Continuar"));
+  return { p, siguiente: sig, atras: atras.children[0] };
+}
+
+async function afDia() {
+  const p = await af_pantalla("Alta · 03 Reserva · Día");
+  const atras = agregar(p, await af_encabezado("Agenda tu cita", true));
+  agregar(p, await af_pasos(2));
+  agregar(p, await af_resumenChip(), false);
+  agregar(p, await af_txt("Elige el día", "H2"));
+  agregar(p, await af_calendario());
+  agregar(p, await af_leyenda(), false);
+  const sig = agregar(p, await af_boton("Continuar"));
+  return { p, siguiente: sig, atras: atras.children[0] };
+}
+
+async function afHora() {
+  const p = await af_pantalla("Alta · 04 Reserva · Hora");
+  const atras = agregar(p, await af_encabezado("Agenda tu cita", true));
+  agregar(p, await af_pasos(3));
+  agregar(p, await af_resumenChip(), false);
+  agregar(p, await af_txt("Elige la hora", "H2"));
+  agregar(p, await af_txt("Jueves 19 de noviembre", "Cuerpo", "texto/secundario"));
+  agregar(p, await af_txt("Mañana", "H3"));
+  agregar(p, await af_horarios(["10:00", "10:30", "11:00", "11:30", "12:00"], "11:00"));
+  agregar(p, await af_txt("Tarde", "H3"));
+  agregar(p, await af_horarios(["16:00", "16:30", "17:00", "17:30", "18:00"]));
+  agregar(p, await af_txt("Solo se muestran los horarios con espacio para tu servicio.", "Pequeño", "texto/secundario"));
+  const sig = agregar(p, await af_boton("Continuar"));
+  return { p, siguiente: sig, atras: atras.children[0] };
+}
+
+async function afDatos() {
+  const p = await af_pantalla("Alta · 05 Reserva · Datos");
+  const atras = agregar(p, await af_encabezado("Agenda tu cita", true));
+  agregar(p, await af_pasos(4));
+  agregar(p, await af_txt("Tus datos", "H2"));
+  for (const [etq, ph] of [["Nombre", "Ej. María López"], ["WhatsApp", "10 dígitos"]]) {
+    const inp = agregar(p, await af_input(etq, ph));
+    // Se estira la caja interna del input al ancho de la pantalla
+    const campo = inp.findOne((n) => n.name === "Campo");
+    try { if (campo) campo.layoutSizingHorizontal = "FILL"; } catch (e) { /* Se conserva el ancho original */ }
+  }
+  agregar(p, await af_txt("Te enviaremos la confirmación por WhatsApp.", "Pequeño", "texto/secundario"));
+  agregar(p, await af_resumen("Resumen de tu cita"));
+  const sig = agregar(p, await af_boton("Confirmar cita"));
+  return { p, siguiente: sig, atras: atras.children[0] };
+}
+
+async function afConfirmacion() {
+  const p = await af_pantalla("Alta · 06 Confirmación");
+  p.counterAxisAlignItems = "CENTER";
+  agregar(p, await af_encabezado());
+  const check = marcoFijo("Éxito", 96, 96);
+  check.cornerRadius = 48;
+  await af_fondo(check, "primario/base");
+  check.appendChild(await af_txt("✓", "H1", "fondo/base"));
+  agregar(p, check, false);
+  const t = agregar(p, await af_txt("¡Tu cita está agendada!", "H1"));
+  t.textAlignHorizontal = "CENTER";
+  const s = agregar(p, await af_txt("Te esperamos con mucho gusto. Si necesitas cambiarla, escríbenos.", "Cuerpo", "texto/secundario"));
+  s.textAlignHorizontal = "CENTER";
+  agregar(p, await af_resumen());
+  agregar(p, await af_boton("Enviar resumen por WhatsApp"));
+  const volver = agregar(p, await af_boton("Volver al inicio", "Secundario"));
+  return { p, siguiente: volver };
+}
+
+// Se conecta un elemento con otra pantalla para el prototipo navegable
+async function conectar(origen, destino) {
+  if (!origen || !destino) return false;
+  try {
+    await origen.setReactionsAsync([{
+      trigger: { type: "ON_CLICK" },
+      actions: [{
+        type: "NODE",
+        destinationId: destino.id,
+        navigation: "NAVIGATE",
+        transition: { type: "DISSOLVE", easing: { type: "EASE_OUT" }, duration: 0.25 },
+        preserveScrollPosition: false,
+      }],
+    }]);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function generarAltaFidelidad() {
+  AF.colores = await crearEstilosColor();
+  AF.textos = await crearEstilosTexto();
+  await figma.loadFontAsync({ family: "Inter", style: "Regular" });
+  await figma.loadFontAsync({ family: "Inter", style: "Bold" });
+
+  // Se buscan los componentes creados con el comando 2 en todas las páginas
+  await figma.loadAllPagesAsync();
+  const conjuntos = figma.root.findAllWithCriteria({ types: ["COMPONENT_SET"] });
+  const sueltos = figma.root.findAllWithCriteria({ types: ["COMPONENT"] });
+  AF.comp.boton = conjuntos.find((c) => c.name === "Botón");
+  AF.comp.input = conjuntos.find((c) => c.name === "Input");
+  AF.comp.dia = conjuntos.find((c) => c.name === "Día calendario");
+  AF.comp.horario = conjuntos.find((c) => c.name === "Horario");
+  AF.comp.tarjeta = sueltos.find((c) => c.name === "Tarjeta servicio");
+  const faltantes = Object.keys(AF.comp).filter((k) => !AF.comp[k]);
+  if (faltantes.length) {
+    figma.closePlugin(`Faltan componentes (${faltantes.join(", ")}). Ejecuta primero "2. Crear componentes".`);
+    return;
+  }
+
+  // Se crea la página de alta fidelidad
+  let pagina = figma.root.children.find((pg) => pg.name === "Alta fidelidad");
+  if (!pagina) {
+    pagina = figma.createPage();
+    pagina.name = "Alta fidelidad";
+  }
+  await figma.setCurrentPageAsync(pagina);
+
+  const pantallas = [];
+  for (const crear of [afInicio, afServicio, afDia, afHora, afDatos, afConfirmacion]) {
+    pantallas.push(await crear());
+  }
+
+  // Se colocan las pantallas como marcos de primer nivel para que el prototipo pueda navegar entre ellas
+  const previos = pagina.children.filter((n) => !pantallas.some((x) => x.p === n));
+  const baseY = previos.reduce((max, n) => Math.max(max, n.y + n.height + 200), 0);
+  const titulo = await af_txt("Reserva · Alta fidelidad", "H1");
+  pagina.appendChild(titulo);
+  titulo.x = 0;
+  titulo.y = baseY;
+  pantallas.forEach((s, i) => {
+    pagina.appendChild(s.p);
+    s.p.x = i * (390 + 80);
+    s.p.y = baseY + 100;
+  });
+
+  // Se conectan los botones "Continuar" hacia adelante y las flechas de regreso hacia atrás
+  let conexiones = 0;
+  for (let i = 0; i < pantallas.length; i++) {
+    const destino = i === pantallas.length - 1 ? pantallas[0].p : pantallas[i + 1].p;
+    if (await conectar(pantallas[i].siguiente, destino)) conexiones++;
+    if (pantallas[i].atras && await conectar(pantallas[i].atras, pantallas[i - 1].p)) conexiones++;
+  }
+  try {
+    pagina.flowStartingPoints = [{ nodeId: pantallas[0].p.id, name: "Reserva de cita" }];
+  } catch (e) { /* Se puede marcar el inicio del flujo a mano en la pestaña Prototipo */ }
+
+  figma.currentPage.selection = pantallas.map((s) => s.p);
+  figma.viewport.scrollAndZoomIntoView(pantallas.map((s) => s.p));
+  figma.closePlugin(`Alta fidelidad creada: ${pantallas.length} pantallas y ${conexiones} conexiones de prototipo.`);
+}
+
 // Se ejecuta el comando elegido en el menú del plugin
-const comandos = { guia: generarGuia, componentes: generarComponentes, wireframes: generarWireframes };
+const comandos = {
+  guia: generarGuia,
+  componentes: generarComponentes,
+  wireframes: generarWireframes,
+  altaFidelidad: generarAltaFidelidad,
+};
 const ejecutar = comandos[figma.command] || generarGuia;
 ejecutar().catch((error) => {
   figma.closePlugin(`Error: ${error.message}`);
