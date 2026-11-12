@@ -45,4 +45,4 @@ Tipografías: **Playfair Display** (títulos) y **DM Sans** (texto e interfaz).
 
 El flujo **Reserva de cita** recorre: Inicio → Servicio → Día → Hora → Datos → Confirmación. Los botones *Continuar* avanzan y las flechas de regreso vuelven al paso anterior.
 
-- **Ver prototipo:** _(pegar aquí el enlace de presentación de Figma)_
+- **[▶ Ver prototipo navegable](https://www.figma.com/proto/6uMRUxFX94QfGki2HLAC5E/Sistemas-citas-dise%C3%B1o?node-id=14-534&page-id=14%3A533&starting-point-node-id=14%3A534&scaling=scale-down&content-scaling=fixed)**
