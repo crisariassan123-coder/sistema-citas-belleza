@@ -1,0 +1,26 @@
+# Se define la base de datos PostgreSQL para el entorno de desarrollo.
+# Las credenciales se toman del archivo .env (ver .env.example).
+services:
+  db:
+    image: postgres:17
+    container_name: salon-citas-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: America/Mexico_City
+    ports:
+      # Se expone en el puerto 5433 de la computadora para no chocar con otro PostgreSQL local
+      - "${DB_PORT}:5432"
+    volumes:
+      # Se conservan los datos aunque el contenedor se borre
+      - salon-citas-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  salon-citas-data:
