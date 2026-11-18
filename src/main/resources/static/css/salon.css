@@ -1,0 +1,99 @@
+/* Se definen los tokens de diseño tomados de la guía de estilo en Figma */
+:root {
+	--salon-primario: #A84D70;
+	--salon-primario-hover: #8E3D5D;
+	--salon-fondo-suave: #F8E8EC;
+	--salon-fondo: #FBF6F2;
+	--salon-acento: #C9A15B;
+	--salon-texto: #3A2A30;
+	--salon-texto-sec: #7A6870;
+	--salon-deshabilitado: #D9D0D3;
+
+	/* Se reemplazan las variables base de Bootstrap */
+	--bs-body-bg: var(--salon-fondo);
+	--bs-body-color: var(--salon-texto);
+	--bs-body-font-family: 'DM Sans', system-ui, sans-serif;
+	--bs-link-color-rgb: 168, 77, 112;
+	--bs-link-hover-color-rgb: 142, 61, 93;
+}
+
+h1, h2, .titulo-serif {
+	font-family: 'Playfair Display', Georgia, serif;
+}
+
+.text-secundario {
+	color: var(--salon-texto-sec);
+}
+
+/* Se personaliza el botón primario con la paleta del salón */
+.btn-primary {
+	--bs-btn-bg: var(--salon-primario);
+	--bs-btn-border-color: var(--salon-primario);
+	--bs-btn-hover-bg: var(--salon-primario-hover);
+	--bs-btn-hover-border-color: var(--salon-primario-hover);
+	--bs-btn-active-bg: var(--salon-primario-hover);
+	--bs-btn-active-border-color: var(--salon-primario-hover);
+	--bs-btn-disabled-bg: var(--salon-deshabilitado);
+	--bs-btn-disabled-border-color: var(--salon-deshabilitado);
+	--bs-btn-disabled-color: var(--salon-texto-sec);
+	--bs-btn-focus-shadow-rgb: 168, 77, 112;
+}
+
+.btn-outline-primary {
+	--bs-btn-color: var(--salon-primario);
+	--bs-btn-border-color: var(--salon-primario);
+	--bs-btn-hover-bg: var(--salon-primario);
+	--bs-btn-hover-border-color: var(--salon-primario);
+	--bs-btn-active-bg: var(--salon-primario-hover);
+	--bs-btn-focus-shadow-rgb: 168, 77, 112;
+}
+
+/* Se aplican botones en forma de píldora con altura táctil cómoda */
+.btn-salon {
+	border-radius: 999px;
+	min-height: 48px;
+	padding-inline: 1.75rem;
+	font-weight: 700;
+}
+
+.form-control {
+	border-radius: 12px;
+	border-color: var(--salon-deshabilitado);
+	min-height: 48px;
+}
+
+.form-control:focus {
+	border-color: var(--salon-primario);
+	box-shadow: 0 0 0 0.2rem rgba(168, 77, 112, 0.2);
+}
+
+.tarjeta-salon {
+	background: #fff;
+	border: 0;
+	border-radius: 16px;
+	box-shadow: 0 6px 20px rgba(58, 42, 48, 0.08);
+}
+
+/* Se dibuja el logotipo provisional del salón */
+.logo-salon {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: var(--salon-primario);
+	color: var(--salon-fondo);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+}
+
+.fondo-suave {
+	background: var(--salon-fondo-suave);
+}
+
+.alert-salon {
+	background: var(--salon-fondo-suave);
+	color: var(--salon-primario-hover);
+	border: 0;
+	border-radius: 12px;
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/head :: head('Inicio')}"></head>
+<body>
+	<!-- Página de inicio provisional; el diseño completo se construye en HU-13 -->
+	<header class="container py-3 d-flex align-items-center gap-2">
+		<span class="logo-salon">A</span>
+		<span class="fw-bold">Salón Aurora</span>
+	</header>
+
+	<main class="container py-4">
+		<!-- Se confirma el cierre de sesión cuando se llega desde el panel -->
+		<div th:if="${param.salida}" class="alert alert-salon d-flex gap-2 align-items-center" role="status">
+			<i class="bi bi-check-circle"></i>
+			<span>Cerraste sesión correctamente.</span>
+		</div>
+
+		<section class="row align-items-center g-4 py-4">
+			<div class="col-md-6">
+				<h1 class="display-5 mb-3">Belleza que te hace sentir tú</h1>
+				<p class="lead text-secundario mb-4">
+					Muy pronto podrás agendar tu cita en línea en menos de un minuto, sin llamadas ni esperas.
+				</p>
+				<button type="button" class="btn btn-primary btn-salon" disabled>Agenda tu cita · muy pronto</button>
+			</div>
+			<div class="col-md-6">
+				<div class="tarjeta-salon fondo-suave d-flex align-items-center justify-content-center" style="min-height:260px">
+					<span class="text-secundario"><i class="bi bi-flower1 fs-1"></i></span>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<footer class="container py-4 small text-secundario">
+		<a th:href="@{/login}" class="text-decoration-none text-secundario">Acceso para la dueña</a>
+	</footer>
+</body>
+</html>

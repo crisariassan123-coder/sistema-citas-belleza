@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/head :: head('Iniciar sesión')}"></head>
+<body class="min-vh-100 d-flex align-items-center fondo-suave">
+	<main class="container py-5">
+		<div class="row justify-content-center">
+			<div class="col-12 col-sm-9 col-md-6 col-lg-4">
+				<div class="tarjeta-salon p-4 p-md-5">
+					<div class="text-center mb-4">
+						<span class="logo-salon mb-3" style="width:56px;height:56px;font-size:1.4rem">A</span>
+						<h1 class="h3 mb-1">Panel del salón</h1>
+						<p class="text-secundario mb-0">Acceso exclusivo para la dueña</p>
+					</div>
+
+					<!-- Se muestra un aviso genérico si las credenciales no son válidas -->
+					<div th:if="${param.error}" class="alert alert-salon d-flex gap-2 align-items-center" role="alert">
+						<i class="bi bi-exclamation-circle"></i>
+						<span>Usuario o contraseña incorrectos. Inténtalo de nuevo.</span>
+					</div>
+
+					<!-- th:action agrega en automático el token CSRF al formulario -->
+					<form th:action="@{/login}" method="post" novalidate>
+						<div class="mb-3">
+							<label for="username" class="form-label fw-semibold small">Usuario</label>
+							<input type="text" id="username" name="username" class="form-control"
+								autocomplete="username" autofocus required>
+						</div>
+						<div class="mb-4">
+							<label for="password" class="form-label fw-semibold small">Contraseña</label>
+							<input type="password" id="password" name="password" class="form-control"
+								autocomplete="current-password" required>
+						</div>
+						<button type="submit" class="btn btn-primary btn-salon w-100">Entrar</button>
+					</form>
+
+					<p class="text-center mt-4 mb-0 small">
+						<a th:href="@{/}" class="text-decoration-none">← Volver al sitio</a>
+					</p>
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+</html>
