@@ -8,7 +8,6 @@ import static org.springframework.security.test.web.servlet.response.SecurityMoc
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +59,8 @@ class SeguridadTests {
 	void elPanelRedirigeAlLoginSinSesion() throws Exception {
 		mvc.perform(get("/admin"))
 				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrlPattern("**/login"));
+				// Se espera la redirección relativa que genera Spring Security
+				.andExpect(redirectedUrl("/login"));
 	}
 
 	@Test
