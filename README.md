@@ -1,5 +1,7 @@
 # Sistema de citas · Salón de belleza
 
+[![CI](https://github.com/crisariassan123-coder/sistema-citas-belleza/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/crisariassan123-coder/sistema-citas-belleza/actions/workflows/ci.yml)
+
 Sistema web para que las clientas de un salón de belleza agenden citas en línea según la disponibilidad real de la dueña, quien administra su agenda, servicios, horario, días inhábiles y vacaciones desde un panel privado.
 
 **Stack:** Java 25 · Spring Boot 4 · Spring Security · Spring Data JPA · Thymeleaf · Bootstrap 5 · PostgreSQL 17 · Flyway · Docker

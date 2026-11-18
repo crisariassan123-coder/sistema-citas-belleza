@@ -1,0 +1,56 @@
+# Integración continua: se compila el proyecto y se ejecutan las pruebas
+# en cada push a develop/main y en cada Pull Request hacia esas ramas.
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  build:
+    name: Compilar y probar
+    runs-on: ubuntu-latest
+
+    # Se levanta un PostgreSQL temporal para las pruebas que usan base de datos
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: salon_citas
+          POSTGRES_USER: salon_ci
+          POSTGRES_PASSWORD: salon_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U salon_ci -d salon_citas"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Se pasan las mismas variables que la aplicación lee del archivo .env
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: salon_citas
+      DB_USER: salon_ci
+      DB_PASSWORD: salon_ci
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      # Se da permiso de ejecución al wrapper, que pudo perderse al hacer commit desde Windows
+      - name: Dar permisos a mvnw
+        run: chmod +x mvnw
+
+      - name: Compilar y ejecutar pruebas
+        run: ./mvnw -B verify
