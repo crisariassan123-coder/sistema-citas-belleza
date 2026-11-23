@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/head :: head(${servicioId == null ? 'Nuevo servicio' : 'Editar servicio'})}"></head>
+<body>
+	<nav th:replace="~{fragments/admin :: nav('servicios')}"></nav>
+
+	<main class="container py-4">
+		<div class="row justify-content-center">
+			<div class="col-12 col-md-8 col-lg-6">
+				<a th:href="@{/admin/servicios}" class="small text-decoration-none">← Volver a servicios</a>
+				<h1 class="h2 mt-2 mb-3" th:text="${servicioId == null} ? 'Nuevo servicio' : 'Editar servicio'">Nuevo servicio</h1>
+
+				<!-- Se usa la misma vista para crear y editar; cambia solo la URL de envío -->
+				<form th:object="${form}" method="post" novalidate class="tarjeta-salon p-4"
+					th:action="${servicioId == null} ? @{/admin/servicios} : @{/admin/servicios/{id}(id=${servicioId})}">
+
+					<div class="mb-3">
+						<label for="nombre" class="form-label fw-semibold small">Nombre</label>
+						<input type="text" th:field="*{nombre}" class="form-control" maxlength="100"
+							th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid'" placeholder="Ej. Corte y peinado">
+						<div class="invalid-feedback" th:errors="*{nombre}">Error</div>
+					</div>
+
+					<div class="mb-3">
+						<label for="descripcion" class="form-label fw-semibold small">Descripción <span class="text-secundario fw-normal">(opcional)</span></label>
+						<textarea th:field="*{descripcion}" class="form-control" rows="2" maxlength="255"
+							th:classappend="${#fields.hasErrors('descripcion')} ? 'is-invalid'"
+							placeholder="Ej. Incluye lavado y peinado"></textarea>
+						<div class="invalid-feedback" th:errors="*{descripcion}">Error</div>
+					</div>
+
+					<div class="row g-3 mb-4">
+						<div class="col-6">
+							<label for="duracionMin" class="form-label fw-semibold small">Duración (min)</label>
+							<input type="number" th:field="*{duracionMin}" class="form-control" min="15" max="600" step="15"
+								th:classappend="${#fields.hasErrors('duracionMin') or #fields.hasErrors('duracionMultiploDe15')} ? 'is-invalid'">
+							<div class="invalid-feedback" th:errors="*{duracionMin}">Error</div>
+							<div class="invalid-feedback" th:if="${#fields.hasErrors('duracionMultiploDe15')}"
+								th:errors="*{duracionMultiploDe15}">Error</div>
+						</div>
+						<div class="col-6">
+							<label for="precio" class="form-label fw-semibold small">Precio ($)</label>
+							<input type="number" th:field="*{precio}" class="form-control" min="0" step="0.01"
+								th:classappend="${#fields.hasErrors('precio')} ? 'is-invalid'">
+							<div class="invalid-feedback" th:errors="*{precio}">Error</div>
+						</div>
+					</div>
+
+					<button type="submit" class="btn btn-primary btn-salon w-100">Guardar servicio</button>
+				</form>
+			</div>
+		</div>
+	</main>
+</body>
+</html>

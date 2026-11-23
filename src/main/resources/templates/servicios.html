@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/head :: head('Servicios')}"></head>
+<body>
+	<header class="container py-3 d-flex align-items-center justify-content-between">
+		<a th:href="@{/}" class="d-flex align-items-center gap-2 text-decoration-none text-reset">
+			<span class="logo-salon">A</span>
+			<span class="fw-bold">Salón Aurora</span>
+		</a>
+		<a th:href="@{/}" class="small text-decoration-none">← Inicio</a>
+	</header>
+
+	<main class="container py-4">
+		<h1 class="mb-1">Nuestros servicios</h1>
+		<p class="text-secundario mb-4">Elige el que más te guste; muy pronto podrás reservarlo en línea.</p>
+
+		<!-- Se muestran solo los servicios activos (HU-04) -->
+		<div th:if="${#lists.isEmpty(servicios)}" class="tarjeta-salon p-4 text-center text-secundario">
+			Estamos preparando nuestro catálogo. ¡Vuelve pronto!
+		</div>
+		<div class="row g-3">
+			<div class="col-12 col-md-6 col-lg-4" th:each="s : ${servicios}">
+				<div th:replace="~{fragments/servicios :: tarjeta(${s})}"></div>
+			</div>
+		</div>
+	</main>
+</body>
+</html>

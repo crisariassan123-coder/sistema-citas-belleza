@@ -6,16 +6,36 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import com.cristianarias.salon.servicio.ServicioService;
+
 /**
- * Rutas de las páginas principales.
- * El inicio y el panel son provisionales; se completan en las siguientes historias.
+ * Rutas de las páginas principales del sitio público y del panel.
  */
 @Controller
 public class PaginaController {
 
+	// Se limita el número de servicios que se destacan en la página de inicio
+	private static final int SERVICIOS_DESTACADOS = 3;
+
+	private final ServicioService servicioService;
+
+	public PaginaController(ServicioService servicioService) {
+		this.servicioService = servicioService;
+	}
+
 	@GetMapping("/")
-	public String inicio() {
+	public String inicio(Model model) {
+		model.addAttribute("servicios", servicioService.listarActivos().stream()
+				.limit(SERVICIOS_DESTACADOS)
+				.toList());
 		return "index";
+	}
+
+	// Se muestra el catálogo completo de servicios activos (HU-04)
+	@GetMapping("/servicios")
+	public String servicios(Model model) {
+		model.addAttribute("servicios", servicioService.listarActivos());
+		return "servicios";
 	}
 
 	@GetMapping("/login")

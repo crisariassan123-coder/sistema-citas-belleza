@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<body>
+	<!-- Se comparte la barra de navegación del panel; "activo" marca la sección actual -->
+	<nav th:fragment="nav(activo)" class="bg-white border-bottom">
+		<div class="container py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+			<a th:href="@{/admin}" class="d-flex align-items-center gap-2 text-decoration-none text-reset">
+				<span class="logo-salon">A</span>
+				<span class="fw-bold">Panel · Salón Aurora</span>
+			</a>
+			<div class="d-flex align-items-center gap-1 flex-wrap">
+				<a th:href="@{/admin}" class="nav-admin" th:classappend="${activo == 'inicio'} ? 'activo'">Inicio</a>
+				<a th:href="@{/admin/servicios}" class="nav-admin" th:classappend="${activo == 'servicios'} ? 'activo'">Servicios</a>
+				<!-- Se cierra la sesión con POST y token CSRF (HU-02) -->
+				<form th:action="@{/logout}" method="post" class="m-0 ms-2">
+					<button type="submit" class="btn btn-outline-primary btn-salon btn-sm" style="min-height:40px">
+						<i class="bi bi-box-arrow-right me-1"></i>Cerrar sesión
+					</button>
+				</form>
+			</div>
+		</div>
+	</nav>
+</body>
+</html>

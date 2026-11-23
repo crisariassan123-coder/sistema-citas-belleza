@@ -2,30 +2,26 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head th:replace="~{fragments/head :: head('Panel')}"></head>
 <body>
-	<nav class="bg-white border-bottom">
-		<div class="container py-3 d-flex align-items-center justify-content-between">
-			<div class="d-flex align-items-center gap-2">
-				<span class="logo-salon">A</span>
-				<span class="fw-bold">Panel · Salón Aurora</span>
-			</div>
-			<!-- Se cierra la sesión con POST y token CSRF, como recomienda Spring Security (HU-02) -->
-			<form th:action="@{/logout}" method="post" class="m-0">
-				<button type="submit" class="btn btn-outline-primary btn-salon btn-sm" style="min-height:40px">
-					<i class="bi bi-box-arrow-right me-1"></i>Cerrar sesión
-				</button>
-			</form>
-		</div>
-	</nav>
+	<nav th:replace="~{fragments/admin :: nav('inicio')}"></nav>
 
 	<main class="container py-4">
 		<h1 class="h2 mb-1">Hola, <span th:text="${usuario}">dueña</span></h1>
-		<p class="text-secundario mb-4">Desde aquí administrarás tu agenda, servicios, horario y días inhábiles.</p>
+		<p class="text-secundario mb-4">Desde aquí administras tu agenda, servicios, horario y días inhábiles.</p>
 
-		<!-- Se muestran los módulos que se construirán en los siguientes sprints -->
 		<div class="row g-3">
-			<div class="col-6 col-md-3" th:each="modulo : ${ {'Agenda', 'Bloqueos', 'Servicios', 'Horario'} }">
-				<div class="tarjeta-salon p-3 h-100">
-					<div class="fw-bold" th:text="${modulo}">Módulo</div>
+			<!-- Se enlaza el módulo de servicios, que ya está disponible -->
+			<div class="col-6 col-md-3">
+				<a th:href="@{/admin/servicios}" class="tarjeta-salon tarjeta-enlace p-3 h-100 d-block text-decoration-none text-reset">
+					<i class="bi bi-scissors fs-4 text-primario"></i>
+					<div class="fw-bold mt-2">Servicios</div>
+					<div class="small text-secundario">Precios y duración</div>
+				</a>
+			</div>
+			<!-- Se listan los módulos que se construirán en los siguientes sprints -->
+			<div class="col-6 col-md-3" th:each="modulo : ${ {'Agenda', 'Bloqueos', 'Horario'} }">
+				<div class="tarjeta-salon p-3 h-100 opacity-75">
+					<i class="bi bi-hourglass-split fs-4 text-secundario"></i>
+					<div class="fw-bold mt-2" th:text="${modulo}">Módulo</div>
 					<div class="small text-secundario">Próximamente</div>
 				</div>
 			</div>
