@@ -97,3 +97,32 @@ h1, h2, .titulo-serif {
 	border: 0;
 	border-radius: 12px;
 }
+
+.text-primario {
+	color: var(--salon-primario);
+}
+
+/* Se agregan los enlaces de navegación del panel */
+.nav-admin {
+	padding: 0.5rem 0.9rem;
+	border-radius: 999px;
+	color: var(--salon-texto-sec);
+	text-decoration: none;
+	font-weight: 500;
+}
+
+.nav-admin:hover,
+.nav-admin.activo {
+	background: var(--salon-fondo-suave);
+	color: var(--salon-primario-hover);
+}
+
+/* Se resalta la tarjeta al pasar el mouse cuando es un enlace */
+.tarjeta-enlace {
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tarjeta-enlace:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 10px 24px rgba(58, 42, 48, 0.12);
+}

@@ -2,10 +2,13 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head th:replace="~{fragments/head :: head('Inicio')}"></head>
 <body>
-	<!-- Página de inicio provisional; el diseño completo se construye en HU-13 -->
-	<header class="container py-3 d-flex align-items-center gap-2">
-		<span class="logo-salon">A</span>
-		<span class="fw-bold">Salón Aurora</span>
+	<!-- Página de inicio; el diseño completo con el flujo de reserva se construye en HU-13 -->
+	<header class="container py-3 d-flex align-items-center justify-content-between">
+		<div class="d-flex align-items-center gap-2">
+			<span class="logo-salon">A</span>
+			<span class="fw-bold">Salón Aurora</span>
+		</div>
+		<a th:href="@{/servicios}" class="small text-decoration-none fw-semibold">Servicios</a>
 	</header>
 
 	<main class="container py-4">
@@ -26,6 +29,19 @@
 			<div class="col-md-6">
 				<div class="tarjeta-salon fondo-suave d-flex align-items-center justify-content-center" style="min-height:260px">
 					<span class="text-secundario"><i class="bi bi-flower1 fs-1"></i></span>
+				</div>
+			</div>
+		</section>
+
+		<!-- Se destacan los primeros servicios activos del catálogo (HU-04) -->
+		<section th:unless="${#lists.isEmpty(servicios)}" class="py-4">
+			<div class="d-flex align-items-end justify-content-between mb-3">
+				<h2 class="mb-0">Servicios</h2>
+				<a th:href="@{/servicios}" class="fw-semibold text-decoration-none">Ver todos →</a>
+			</div>
+			<div class="row g-3">
+				<div class="col-12 col-md-6 col-lg-4" th:each="s : ${servicios}">
+					<div th:replace="~{fragments/servicios :: tarjeta(${s})}"></div>
 				</div>
 			</div>
 		</section>

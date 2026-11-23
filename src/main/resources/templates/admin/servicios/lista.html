@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/head :: head('Servicios')}"></head>
+<body>
+	<nav th:replace="~{fragments/admin :: nav('servicios')}"></nav>
+
+	<main class="container py-4">
+		<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+			<div>
+				<h1 class="h2 mb-0">Mis servicios</h1>
+				<p class="text-secundario mb-0">Las clientas solo ven los servicios activos.</p>
+			</div>
+			<a th:href="@{/admin/servicios/nuevo}" class="btn btn-primary btn-salon d-inline-flex align-items-center">
+				<i class="bi bi-plus-lg me-1"></i>Nuevo servicio
+			</a>
+		</div>
+
+		<!-- Se muestra el resultado de la última acción (agregar, editar, activar...) -->
+		<div th:if="${mensaje}" class="alert alert-salon d-flex gap-2 align-items-center" role="status">
+			<i class="bi bi-check-circle"></i><span th:text="${mensaje}">Mensaje</span>
+		</div>
+
+		<div th:if="${#lists.isEmpty(servicios)}" class="tarjeta-salon p-4 text-center text-secundario">
+			<i class="bi bi-scissors fs-2"></i>
+			<p class="mb-0 mt-2">Aún no registras servicios. Agrega el primero para que aparezca en tu sitio.</p>
+		</div>
+
+		<div class="d-grid gap-3">
+			<div th:each="s : ${servicios}" class="tarjeta-salon p-3 d-flex flex-wrap align-items-center gap-3"
+				th:classappend="${!s.activo} ? 'opacity-75'">
+				<div class="flex-grow-1">
+					<div class="d-flex align-items-center gap-2">
+						<span class="fw-bold" th:text="${s.nombre}">Corte y peinado</span>
+						<span th:unless="${s.activo}" class="badge rounded-pill text-bg-secondary">Inactivo</span>
+					</div>
+					<div class="small text-secundario" th:text="${s.descripcion}">Descripción</div>
+					<div class="small mt-1">
+						<span th:text="${s.duracionMin} + ' min'">60 min</span> ·
+						<span class="fw-bold text-primario" th:text="'$' + ${#numbers.formatDecimal(s.precio, 1, 'COMMA', 2, 'POINT')}">$350.00</span>
+					</div>
+				</div>
+				<div class="d-flex gap-2">
+					<a th:href="@{/admin/servicios/{id}/editar(id=${s.id})}" class="btn btn-outline-primary btn-salon btn-sm" style="min-height:40px">
+						<i class="bi bi-pencil me-1"></i>Editar
+					</a>
+					<!-- Se desactiva en lugar de borrar para conservar el historial de citas (RN-10) -->
+					<form th:if="${s.activo}" th:action="@{/admin/servicios/{id}/desactivar(id=${s.id})}" method="post" class="m-0">
+						<button type="submit" class="btn btn-light btn-salon btn-sm" style="min-height:40px">Desactivar</button>
+					</form>
+					<form th:unless="${s.activo}" th:action="@{/admin/servicios/{id}/activar(id=${s.id})}" method="post" class="m-0">
+						<button type="submit" class="btn btn-primary btn-salon btn-sm" style="min-height:40px">Activar</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+</html>
