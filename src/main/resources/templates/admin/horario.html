@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/head :: head('Horario')}"></head>
+<body>
+	<nav th:replace="~{fragments/admin :: nav('horario')}"></nav>
+
+	<main class="container py-4">
+		<div class="row justify-content-center">
+			<div class="col-12 col-lg-8">
+				<h1 class="h2 mb-1">Mi horario</h1>
+				<p class="text-secundario mb-3">Las clientas solo podrán reservar dentro de estos horarios.</p>
+
+				<div th:if="${mensaje}" class="alert alert-salon d-flex gap-2 align-items-center" role="status">
+					<i class="bi bi-check-circle"></i><span th:text="${mensaje}">Mensaje</span>
+				</div>
+
+				<!-- Se envían los 7 días juntos; cada fila se vincula con dias[índice] -->
+				<form th:action="@{/admin/horario}" th:object="${form}" method="post" novalidate>
+					<div class="d-grid gap-2 mb-4">
+						<div th:each="dia, stat : *{dias}" class="tarjeta-salon p-3 fila-dia"
+							th:classappend="${dia.laborable} ? '' : 'dia-libre'">
+							<input type="hidden" th:field="*{dias[__${stat.index}__].diaSemana}">
+							<div class="row g-2 align-items-center">
+								<div class="col-12 col-sm-4 d-flex align-items-center justify-content-between">
+									<span class="fw-bold" th:text="${dia.nombre}">Lunes</span>
+									<!-- Se marca si la dueña trabaja ese día -->
+									<div class="form-check form-switch m-0">
+										<!-- Se envuelve el interruptor con su etiqueta para no depender del id generado -->
+										<label class="form-check-label small text-secundario">
+											<input class="form-check-input interruptor-dia" type="checkbox" role="switch"
+												th:field="*{dias[__${stat.index}__].laborable}">
+											Trabajo
+										</label>
+									</div>
+								</div>
+								<div class="col-6 col-sm-4">
+									<label class="form-label small text-secundario mb-1">Abre</label>
+									<input type="time" class="form-control hora-dia" step="900"
+										th:field="*{dias[__${stat.index}__].horaInicio}"
+										th:classappend="${#fields.hasErrors('dias[__${stat.index}__].horasValidas')} ? 'is-invalid'">
+								</div>
+								<div class="col-6 col-sm-4">
+									<label class="form-label small text-secundario mb-1">Cierra</label>
+									<input type="time" class="form-control hora-dia" step="900"
+										th:field="*{dias[__${stat.index}__].horaFin}"
+										th:classappend="${#fields.hasErrors('dias[__${stat.index}__].horasValidas')} ? 'is-invalid'">
+								</div>
+							</div>
+							<div class="small text-danger mt-2"
+								th:if="${#fields.hasErrors('dias[__${stat.index}__].horasValidas')}"
+								th:errors="*{dias[__${stat.index}__].horasValidas}">Error</div>
+						</div>
+					</div>
+
+					<button type="submit" class="btn btn-primary btn-salon w-100">Guardar horario</button>
+				</form>
+			</div>
+		</div>
+	</main>
+
+	<script>
+		// Se atenúa visualmente la fila cuando el día se marca como no laborable
+		document.querySelectorAll('.interruptor-dia').forEach(function (interruptor) {
+			interruptor.addEventListener('change', function () {
+				interruptor.closest('.fila-dia').classList.toggle('dia-libre', !interruptor.checked);
+			});
+		});
+	</script>
+</body>
+</html>

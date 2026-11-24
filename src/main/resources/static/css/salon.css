@@ -126,3 +126,13 @@ h1, h2, .titulo-serif {
 	transform: translateY(-2px);
 	box-shadow: 0 10px 24px rgba(58, 42, 48, 0.12);
 }
+
+/* Se atenúan los días que la dueña no trabaja en la pantalla de horario */
+.dia-libre .hora-dia {
+	opacity: 0.45;
+}
+
+.form-check-input:checked {
+	background-color: var(--salon-primario);
+	border-color: var(--salon-primario);
+}
