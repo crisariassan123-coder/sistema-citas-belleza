@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head th:replace="~{fragments/head :: head('Días inhábiles')}"></head>
+<body>
+	<nav th:replace="~{fragments/admin :: nav('bloqueos')}"></nav>
+
+	<main class="container py-4">
+		<h1 class="h2 mb-1">Días inhábiles y vacaciones</h1>
+		<p class="text-secundario mb-3">Bloquea los días u horas en que no atiendes; las clientas no podrán reservar en ellos.</p>
+
+		<div th:if="${mensaje}" class="alert alert-salon d-flex gap-2 align-items-center" role="status">
+			<i class="bi bi-check-circle"></i><span th:text="${mensaje}">Mensaje</span>
+		</div>
+		<!-- Se avisa cuando el bloqueo cae sobre citas ya agendadas (RN-09) -->
+		<div th:if="${aviso}" class="alert alert-aviso d-flex gap-2 align-items-center" role="alert">
+			<i class="bi bi-exclamation-triangle"></i><span th:text="${aviso}">Aviso</span>
+		</div>
+
+		<div class="row g-4">
+			<!-- Formulario para crear un bloqueo -->
+			<div class="col-12 col-lg-5">
+				<form th:action="@{/admin/bloqueos}" th:object="${form}" method="post" novalidate class="tarjeta-salon p-4">
+					<h2 class="h5 mb-3">Nuevo bloqueo</h2>
+
+					<!-- Se elige el tipo con tarjetas grandes; el radio real queda oculto pero accesible -->
+					<div class="opciones-tipo mb-3" role="radiogroup" aria-label="Tipo de bloqueo">
+						<label th:each="t : ${tipos}" class="opcion-tipo">
+							<input type="radio" class="visually-hidden radio-tipo" th:field="*{tipo}" th:value="${t}">
+							<i class="bi fs-4 text-primario" th:classappend="${t.icono}"></i>
+							<span class="fw-bold d-block mt-1" th:text="${t.nombre}">Día completo</span>
+							<span class="small text-secundario d-none d-sm-block" th:text="${t.ayuda}">Ayuda</span>
+						</label>
+					</div>
+
+					<div class="row g-3 mb-3">
+						<div class="col-12" id="grupo-inicio">
+							<label class="form-label fw-semibold small" id="etiqueta-fecha" for="fechaInicio">Fecha</label>
+							<input type="date" th:field="*{fechaInicio}" th:min="${hoy}" class="form-control"
+								th:classappend="${#fields.hasErrors('fechaInicio')} ? 'is-invalid'">
+							<div class="invalid-feedback" th:errors="*{fechaInicio}">Error</div>
+						</div>
+						<div class="col-12 col-sm-6 solo-rango">
+							<label class="form-label fw-semibold small" for="fechaFin">Último día</label>
+							<input type="date" th:field="*{fechaFin}" th:min="${hoy}" class="form-control"
+								th:classappend="${#fields.hasErrors('rangoValido')} ? 'is-invalid'">
+							<div class="invalid-feedback" th:errors="*{rangoValido}">Error</div>
+						</div>
+					</div>
+
+					<div class="row g-3 mb-3 solo-horas">
+						<div class="col-6">
+							<label class="form-label fw-semibold small" for="horaInicio">Desde</label>
+							<input type="time" th:field="*{horaInicio}" step="900" class="form-control"
+								th:classappend="${#fields.hasErrors('horasValidas')} ? 'is-invalid'">
+						</div>
+						<div class="col-6">
+							<label class="form-label fw-semibold small" for="horaFin">Hasta</label>
+							<input type="time" th:field="*{horaFin}" step="900" class="form-control"
+								th:classappend="${#fields.hasErrors('horasValidas')} ? 'is-invalid'">
+						</div>
+						<div class="col-12 small text-danger mt-1" th:if="${#fields.hasErrors('horasValidas')}"
+							th:errors="*{horasValidas}">Error</div>
+					</div>
+
+					<div class="mb-4">
+						<label class="form-label fw-semibold small" for="motivo">Motivo <span class="text-secundario fw-normal">(opcional, solo lo ves tú)</span></label>
+						<input type="text" th:field="*{motivo}" class="form-control" maxlength="150"
+							th:classappend="${#fields.hasErrors('motivo')} ? 'is-invalid'" placeholder="Ej. Cita médica, curso, vacaciones">
+						<div class="invalid-feedback" th:errors="*{motivo}">Error</div>
+					</div>
+
+					<button type="submit" class="btn btn-primary btn-salon w-100">
+						<i class="bi bi-lock me-1"></i>Bloquear
+					</button>
+				</form>
+			</div>
+
+			<!-- Lista de bloqueos que aún no terminan -->
+			<div class="col-12 col-lg-7">
+				<h2 class="h5 mb-3">Próximos bloqueos</h2>
+
+				<div th:if="${#lists.isEmpty(bloqueos)}" class="tarjeta-salon p-4 text-center text-secundario">
+					<i class="bi bi-calendar-check fs-2"></i>
+					<p class="mb-0 mt-2">No tienes bloqueos próximos. Tu agenda está abierta según tu horario semanal.</p>
+				</div>
+
+				<div class="d-grid gap-3">
+					<div th:each="b : ${bloqueos}" class="tarjeta-salon p-3 d-flex align-items-center gap-3">
+						<span class="icono-bloqueo"><i class="bi" th:classappend="${b.tipo.icono}"></i></span>
+						<div class="flex-grow-1">
+							<div class="d-flex flex-wrap align-items-center gap-2">
+								<span class="fw-bold" th:text="${b.fechasTexto}">Martes 2 de diciembre de 2026</span>
+								<span class="badge rounded-pill etiqueta-tipo" th:text="${b.tipo.nombre}">Día completo</span>
+							</div>
+							<div class="small text-secundario">
+								<span th:text="${b.horasTexto}">Todo el día</span>
+								<span th:if="${b.totalDias > 1}" th:text="' · ' + ${b.totalDias} + ' días'"> · 8 días</span>
+								<span th:if="${b.motivo}" th:text="' · ' + ${b.motivo}"> · Motivo</span>
+							</div>
+						</div>
+						<!-- Se pide confirmación antes de quitar el bloqueo -->
+						<form th:action="@{/admin/bloqueos/{id}/eliminar(id=${b.id})}" method="post" class="m-0"
+							onsubmit="return confirm('¿Quitar este bloqueo? Esos horarios volverán a estar disponibles.');">
+							<button type="submit" class="btn btn-light btn-salon btn-sm px-3" style="min-height:44px"
+								th:attr="aria-label='Quitar bloqueo del ' + ${b.fechasTexto}">
+								<i class="bi bi-trash"></i>
+							</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<script>
+		// Se muestran solo los campos que corresponden al tipo elegido
+		(function () {
+			var radios = document.querySelectorAll('.radio-tipo');
+			var etiqueta = document.getElementById('etiqueta-fecha');
+			var grupoInicio = document.getElementById('grupo-inicio');
+			var inicio = document.getElementById('fechaInicio');
+			var fin = document.getElementById('fechaFin');
+
+			function actualizar() {
+				var elegido = document.querySelector('.radio-tipo:checked');
+				var tipo = elegido ? elegido.value : 'DIA';
+				document.querySelectorAll('.solo-rango').forEach(function (e) { e.hidden = tipo !== 'RANGO'; });
+				document.querySelectorAll('.solo-horas').forEach(function (e) { e.hidden = tipo !== 'HORAS'; });
+				grupoInicio.classList.toggle('col-sm-6', tipo === 'RANGO');
+				etiqueta.textContent = tipo === 'RANGO' ? 'Primer día' : 'Fecha';
+			}
+
+			radios.forEach(function (r) { r.addEventListener('change', actualizar); });
+
+			// Se evita elegir un último día anterior al primero
+			inicio.addEventListener('change', function () {
+				if (inicio.value) {
+					fin.min = inicio.value;
+					if (!fin.value || fin.value < inicio.value) {
+						fin.value = inicio.value;
+					}
+				}
+			});
+
+			actualizar();
+		})();
+	</script>
+</body>
+</html>
