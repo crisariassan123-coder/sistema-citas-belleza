@@ -24,8 +24,15 @@
 					<div class="small text-secundario">Días y horas de trabajo</div>
 				</a>
 			</div>
+			<div class="col-6 col-md-3">
+				<a th:href="@{/admin/bloqueos}" class="tarjeta-salon tarjeta-enlace p-3 h-100 d-block text-decoration-none text-reset">
+					<i class="bi bi-calendar-x fs-4 text-primario"></i>
+					<div class="fw-bold mt-2">Días inhábiles</div>
+					<div class="small text-secundario">Descansos y vacaciones</div>
+				</a>
+			</div>
 			<!-- Se listan los módulos que se construirán en los siguientes sprints -->
-			<div class="col-6 col-md-3" th:each="modulo : ${ {'Agenda', 'Bloqueos'} }">
+			<div class="col-6 col-md-3" th:each="modulo : ${ {'Agenda'} }">
 				<div class="tarjeta-salon p-3 h-100 opacity-75">
 					<i class="bi bi-hourglass-split fs-4 text-secundario"></i>
 					<div class="fw-bold mt-2" th:text="${modulo}">Módulo</div>

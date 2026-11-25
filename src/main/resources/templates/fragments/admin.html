@@ -12,6 +12,7 @@
 				<a th:href="@{/admin}" class="nav-admin" th:classappend="${activo == 'inicio'} ? 'activo'">Inicio</a>
 				<a th:href="@{/admin/servicios}" class="nav-admin" th:classappend="${activo == 'servicios'} ? 'activo'">Servicios</a>
 				<a th:href="@{/admin/horario}" class="nav-admin" th:classappend="${activo == 'horario'} ? 'activo'">Horario</a>
+				<a th:href="@{/admin/bloqueos}" class="nav-admin" th:classappend="${activo == 'bloqueos'} ? 'activo'">Días inhábiles</a>
 				<!-- Se cierra la sesión con POST y token CSRF (HU-02) -->
 				<form th:action="@{/logout}" method="post" class="m-0 ms-2">
 					<button type="submit" class="btn btn-outline-primary btn-salon btn-sm" style="min-height:40px">

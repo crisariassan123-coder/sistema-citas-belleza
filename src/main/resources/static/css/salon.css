@@ -136,3 +136,64 @@ h1, h2, .titulo-serif {
 	background-color: var(--salon-primario);
 	border-color: var(--salon-primario);
 }
+
+/* Se muestran los tipos de bloqueo como tarjetas seleccionables */
+.opciones-tipo {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.5rem;
+}
+
+.opcion-tipo {
+	border: 2px solid var(--salon-deshabilitado);
+	border-radius: 14px;
+	padding: 0.75rem 0.5rem;
+	text-align: center;
+	cursor: pointer;
+	min-height: 44px;
+	transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.opcion-tipo:hover {
+	border-color: var(--salon-primario);
+}
+
+/* Se resalta la tarjeta cuyo radio está elegido */
+.opcion-tipo:has(input:checked) {
+	border-color: var(--salon-primario);
+	background: var(--salon-fondo-suave);
+	transform: translateY(-1px);
+}
+
+/* Se conserva el contorno de foco para quien navega con teclado */
+.opcion-tipo:has(input:focus-visible) {
+	outline: 3px solid rgba(168, 77, 112, 0.35);
+	outline-offset: 2px;
+}
+
+.icono-bloqueo {
+	width: 44px;
+	height: 44px;
+	flex-shrink: 0;
+	border-radius: 50%;
+	background: var(--salon-fondo-suave);
+	color: var(--salon-primario);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.2rem;
+}
+
+.etiqueta-tipo {
+	background: var(--salon-fondo-suave);
+	color: var(--salon-primario-hover);
+	font-weight: 500;
+}
+
+/* Se usa el dorado de acento para los avisos que requieren atención */
+.alert-aviso {
+	background: #FBF1DF;
+	color: #6B4E1A;
+	border: 0;
+	border-radius: 12px;
+}
